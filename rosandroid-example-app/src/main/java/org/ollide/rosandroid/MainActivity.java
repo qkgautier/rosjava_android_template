@@ -53,5 +53,10 @@ public class MainActivity extends RosActivity {
         NodeConfiguration nodeConfigurationImu = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
         nodeConfigurationImu.setMasterUri(getMasterUri());
         nodeMainExecutor.execute(nodeImu, nodeConfigurationImu);
+
+        NodeMain nodeCamera = new CameraPublisher(this);
+        NodeConfiguration nodeConfigurationCamera = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
+        nodeConfigurationCamera.setMasterUri(getMasterUri());
+        nodeMainExecutor.execute(nodeCamera, nodeConfigurationCamera);
     }
 }
