@@ -16,6 +16,7 @@
 
 package org.ollide.rosandroid;
 
+import android.hardware.SensorManager;
 import android.os.Bundle;
 
 import org.ros.address.InetAddressFactory;
@@ -26,6 +27,8 @@ import org.ros.node.NodeMainExecutor;
 
 public class MainActivity extends RosActivity {
 
+    private SensorManager mSensorManager;
+
     public MainActivity() {
         super("RosAndroidExample", "RosAndroidExample");
     }
@@ -34,15 +37,21 @@ public class MainActivity extends RosActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mSensorManager = (SensorManager)this.getSystemService(SENSOR_SERVICE);
     }
 
     @Override
     protected void init(NodeMainExecutor nodeMainExecutor) {
-        NodeMain node = new SimplePublisherNode();
+        NodeMain nodeSimple = new SimplePublisherNode();
+        NodeConfiguration nodeConfigurationSimple = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
+        nodeConfigurationSimple.setMasterUri(getMasterUri());
+        nodeMainExecutor.execute(nodeSimple, nodeConfigurationSimple);
 
-        NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
-        nodeConfiguration.setMasterUri(getMasterUri());
 
-        nodeMainExecutor.execute(node, nodeConfiguration);
+        NodeMain nodeImu = new ImuPublisher(mSensorManager);
+        NodeConfiguration nodeConfigurationImu = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
+        nodeConfigurationImu.setMasterUri(getMasterUri());
+        nodeMainExecutor.execute(nodeImu, nodeConfigurationImu);
     }
 }
