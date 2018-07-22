@@ -18,6 +18,8 @@ package org.ollide.rosandroid;
 
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.WindowManager;
 
 import org.ros.address.InetAddressFactory;
 import org.ros.android.RosActivity;
@@ -27,7 +29,23 @@ import org.ros.node.NodeMainExecutor;
 
 public class MainActivity extends RosActivity {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    public static final int     VIEW_MODE_RGBA  = 0;
+    public static final int     VIEW_MODE_GRAY  = 1;
+    public static final int     VIEW_MODE_CANNY = 2;
+
+    public static final int     IMAGE_TRANSPORT_COMPRESSION_NONE = 0;
+    public static final int     IMAGE_TRANSPORT_COMPRESSION_PNG = 1;
+    public static final int     IMAGE_TRANSPORT_COMPRESSION_JPEG = 2;
+
+    public static int           viewMode        = VIEW_MODE_RGBA;
+    public static int			  imageCompression = IMAGE_TRANSPORT_COMPRESSION_JPEG;
+    public static int	imageCompressionQuality = 80;
+
     private SensorManager mSensorManager;
+
+    private CameraPublisher nodeCamera;
 
     public MainActivity() {
         super("RosAndroidExample", "RosAndroidExample");
@@ -35,14 +53,41 @@ public class MainActivity extends RosActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
 
         mSensorManager = (SensorManager)this.getSystemService(SENSOR_SERVICE);
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume");
+
+        if (nodeCamera != null)
+        {
+//            nodeCamera.openCamera();
+            nodeCamera.resume();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause");
+
+        if (nodeCamera != null) {
+//            nodeCamera.closeCamera();
+            nodeCamera.pause();
+//            nodeCamera.releaseCamera();
+        }
+    }
+
+    @Override
     protected void init(NodeMainExecutor nodeMainExecutor) {
+        Log.i(TAG, "init");
         NodeMain nodeSimple = new SimplePublisherNode();
         NodeConfiguration nodeConfigurationSimple = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
         nodeConfigurationSimple.setMasterUri(getMasterUri());
@@ -54,9 +99,11 @@ public class MainActivity extends RosActivity {
         nodeConfigurationImu.setMasterUri(getMasterUri());
         nodeMainExecutor.execute(nodeImu, nodeConfigurationImu);
 
-        NodeMain nodeCamera = new CameraPublisher(this);
+        nodeCamera = new CameraPublisher(this);
         NodeConfiguration nodeConfigurationCamera = NodeConfiguration.newPublic(InetAddressFactory.newNonLoopback().getHostAddress());
         nodeConfigurationCamera.setMasterUri(getMasterUri());
         nodeMainExecutor.execute(nodeCamera, nodeConfigurationCamera);
+        nodeCamera.resume();
+        Log.i(TAG, "end init");
     }
 }

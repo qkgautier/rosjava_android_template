@@ -47,7 +47,7 @@ public class SimplePublisherNode extends AbstractNodeMain implements NodeMain {
                 // retrieve current system time
                 String time = new SimpleDateFormat("HH:mm:ss").format(new Date());
 
-                Log.i(TAG, "publishing the current time: " + time);
+//                Log.i(TAG, "publishing the current time: " + time);
 
                 // create and publish a simple string message
                 std_msgs.String str = publisher.newMessage();
